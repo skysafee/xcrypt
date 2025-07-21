@@ -59,6 +59,20 @@
             display: none;
             color: #5cb85c;
         }
+        input.error {
+    border-color: red !important;
+    box-shadow: 0 0 5px red;
+    animation: shake 0.2s ease-in-out 2;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    75% { transform: translateX(-3px); }
+    100% { transform: translateX(0); }
+}
+
     </style>
 </head>
 <body>
@@ -78,7 +92,9 @@
         <textarea id="text" rows="4" required></textarea>
 
         <label><input type="checkbox" id="includePassword"> Include password in copy/download</label>
-        
+        <label for="fileUpload">Upload Encrypted File (.txt):</label>
+<input type="file" id="fileUpload" accept=".txt">
+
         <button id="submit">Submit</button>
         
         <h2>Result:</h2>
@@ -91,6 +107,39 @@
 <p id="footer" style="text-align:center; margin-top:30px; font-size:14px;">Made by Ankuuu</p>
 
     <script>
+        document.getElementById('fileUpload').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const contents = e.target.result;
+        const passwordField = document.getElementById('password');
+        const textField = document.getElementById('text');
+
+        // Extract password if it exists at the bottom
+        const passwordMatch = contents.match(/password:\s*(.+)$/i);
+        let extractedPassword = '';
+        let encryptedText = contents;
+
+        if (passwordMatch) {
+            extractedPassword = passwordMatch[1].trim();
+            encryptedText = contents.replace(/password:\s*.+$/i, '').trim();
+            passwordField.value = extractedPassword;
+            passwordField.classList.remove('error');
+        } else {
+            passwordField.value = '';
+            passwordField.classList.add('error');
+            setTimeout(() => passwordField.classList.remove('error'), 2000);
+        }
+
+        textField.value = encryptedText;
+    };
+
+    reader.readAsText(file);
+});
+
         function arrayBufferToBase64(buffer) {
             const uint8Array = new Uint8Array(buffer);
             let binaryString = '';
